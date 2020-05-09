@@ -1,14 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 import './index.css';
 
 function Square(props) {
+  const { onClick, value } = props;
   return (
-    <button className="square" type="button" onClick={props.onClick}>
-      {props.value}
+    <button className="square" type="button" onClick={onClick}>
+      {value}
     </button>
   );
 }
+
+Square.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  value: PropTypes.string.isRequired,
+};
 
 // helper function that will output winner if won otherwise null
 function calculateWinner(squares) {
@@ -35,10 +42,11 @@ function calculateWinner(squares) {
 class Board extends React.Component {
   // call the handle click function onClick
   renderSquare(i) {
+    const { squares, onClick } = this.props;
     return (
       <Square
-        value={this.props.squares[i]}
-        onClick={() => this.props.onClick(i)}
+        value={squares[i]}
+        onClick={() => onClick(i)}
       />
     );
   }
@@ -66,6 +74,11 @@ class Board extends React.Component {
   }
 }
 
+Board.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  squares: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.func])).isRequired,
+};
+
 class Game extends React.Component {
   constructor(props) {
     super(props);
@@ -86,8 +99,9 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
+    const { history, stepNumber, xIsNext } = this.state;
+    const newHistory = history.slice(0, stepNumber + 1);
+    const current = newHistory[newHistory.length - 1];
     const squares = current.squares.slice();
 
     // Do nothing if someone has already won
@@ -97,19 +111,19 @@ class Game extends React.Component {
 
     // set state depending on next state the swap next state
     // add current state to history
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    squares[i] = xIsNext ? 'X' : 'O';
     this.setState({
-      history: history.concat([{
+      history: newHistory.concat([{
         squares,
       }]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
+      stepNumber: newHistory.length,
+      xIsNext: !xIsNext,
     });
   }
 
   render() {
-    const { history } = this.state;
-    const current = history[this.state.stepNumber];
+    const { history, stepNumber, xIsNext } = this.state;
+    const current = history[stepNumber];
     const winner = calculateWinner(current.squares);
 
     // add buttons for each game state to jump to those states
@@ -129,7 +143,7 @@ class Game extends React.Component {
     if (winner) {
       status = `Winner: ${winner}`;
     } else {
-      status = `Next Player: ${(this.state.xIsNext ? 'X' : 'O')}`;
+      status = `Next Player: ${(xIsNext ? 'X' : 'O')}`;
     }
 
     return (
